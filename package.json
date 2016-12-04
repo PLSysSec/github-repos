@@ -9,6 +9,8 @@
   "author": "deian",
   "license": "GPL-3.0",
   "dependencies": {
+    "async": "^2.1.4",
+    "commander": "^2.9.0",
     "github": "^7.0.0",
     "shelljs": "^0.7.5"
   }
