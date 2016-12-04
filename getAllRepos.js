@@ -1,9 +1,12 @@
 #!/usr/bin/env node
+const shell     = require('shelljs');
+const GitHubApi = require('github');
+
 if (process.argv.length !== 3) {
   throw new Error('Usage: getAllRepos.js <org-name>');
 }
 const org = process.argv[2];
-const GitHubApi = require('github');
+
 const github = new GitHubApi({
     protocol: "https",
     host: "api.github.com", // should be api.github.com for GitHub 
@@ -14,6 +17,9 @@ const github = new GitHubApi({
 });
 
 
+shell.mkdir(org);
+shell.cd(org);
+
 github.repos.getForOrg({
   org: org,
   per_page: 100
@@ -23,6 +29,6 @@ github.repos.getForOrg({
   }
 
   repos.forEach(repo => {
-    console.log(repo.clone_url);
+    shell.exec(`git clone ${repo.clone_url}`, {async:true});
   });
 });
