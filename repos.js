@@ -34,7 +34,9 @@ commander.command('clone-org [org-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
-         .option('-l, --only-lang [lang]', 'Limit cloning to repos of certain language')
+         .option('-l, --lang [lang]', 
+                 'Limit cloning to repos of certain language(s)',
+                 (v, acc) => { acc.push(v); return acc;}, [])
          .description('Clone organization repositories')
          .action(orgClone);
 
@@ -43,7 +45,9 @@ commander.command('clone-user [user-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
-         .option('-l, --only-lang [lang]', 'Limit cloning to repos of certain language')
+         .option('-l, --lang [lang]', 
+                 'Limit cloning to repos of certain language(s)',
+                 (v, acc) => { acc.push(v); return acc;}, [])
          .description('Clone user repositories')
          .action(userClone);
 
@@ -100,7 +104,7 @@ function processUserOrOrgArgs(userOrOrg, opts) {
     name: userOrOrg,
     exclude: opts.exclude || [],
     outDir: opts.out || process.cwd(),
-    lang: opts.onlyLang
+    langs: opts.lang || []
   };
 }
 
@@ -157,7 +161,7 @@ function clone(obj, getRepos) {
   const outDir       = obj.outDir;
   const name         = obj.name;
   const excludeRepos = obj.exclude.map(n => n.toLowerCase());
-  const lang         = obj.lang ? obj.lang.toLowerCase() : undefined;
+  const langs        = obj.langs.map(n => n.toLowerCase());
 
   shell.cd(outDir);
   shell.mkdir(name); shell.cd(name);
@@ -174,9 +178,10 @@ function clone(obj, getRepos) {
       if(excludeRepos.indexOf(name) !== -1) {
         return false; // don't include excluded repos
       }
-      if (lang) {
+      if (langs.length > 0) {
         // if we don't have language, just err on the side of cloning more
-        return (repo.language === null) || (repo.language.toLowerCase() === lang);
+        return (repo.language === null) ||
+          (langs.indexOf(repo.language.toLowerCase()) !== -1);
       }
       return true;
     };
