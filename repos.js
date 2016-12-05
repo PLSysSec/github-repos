@@ -84,7 +84,9 @@ function list(showUrl, getRepos) {
     if (err) {
       throw err;
     }
-    repos.forEach(repo => {
+    repos.sort( (a, b) => {
+      return (a.name < b.name) ? -1 : 1;
+    }).forEach(repo => {
       if (showUrl) {
         console.log(`${repo.name} ${repo.url}`);
       } else {
