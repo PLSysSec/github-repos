@@ -34,7 +34,7 @@ commander.command('clone-org [org-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
-         .option('--only-lang [lang]', 'Limit cloning to repos of certain language')
+         .option('-l, --only-lang [lang]', 'Limit cloning to repos of certain language')
          .description('Clone organization repositories')
          .action(orgClone);
 
@@ -43,7 +43,7 @@ commander.command('clone-user [user-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
-         .option('--only-lang [lang]', 'Limit cloning to repos of certain language')
+         .option('-l, --only-lang [lang]', 'Limit cloning to repos of certain language')
          .description('Clone user repositories')
          .action(userClone);
 
@@ -149,7 +149,8 @@ function clone(obj, getRepos) {
         return false; // don't include excluded repos
       }
       if (lang) {
-        return repo.language && (repo.language.toLowerCase() === lang);
+        // if we don't have language, just err on the side of cloning more
+        return repo.language || (repo.language.toLowerCase() === lang);
       }
       return true;
     };
