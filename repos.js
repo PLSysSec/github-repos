@@ -150,7 +150,7 @@ function clone(obj, getRepos) {
       }
       if (lang) {
         // if we don't have language, just err on the side of cloning more
-        return repo.language || (repo.language.toLowerCase() === lang);
+        return (repo.language === null) || (repo.language.toLowerCase() === lang);
       }
       return true;
     };
