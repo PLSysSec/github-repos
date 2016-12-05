@@ -17,10 +17,10 @@ Get the list of repos:
 github-repos list-org plsyssec
 ```
 
-Get list of repos and their URLs:
+Get list of repos, their URLs and main language:
 
 ```
-github-repos list-user deian --url
+github-repos list-user deian --url --lang
 ```
 
 # Clone examples
@@ -31,8 +31,8 @@ Clone all repos but `github-repos`
 github-repos clone-org plsyssec --exclude github-repos --out /tmp/
 ```
 
-Clone all repos except `github-repos` and `lio`
+Clone all JavaScript repos except `github-repos` and `lio`
 
 ```
-github-repos clone-user deian --exclude lio --exclude github-repos --out /tmp/
+github-repos clone-user deian --exclude lio --exclude github-repos --out /tmp/ --only-lang javascript
 ```

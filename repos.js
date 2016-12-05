@@ -20,11 +20,13 @@ commander.version(require('./package.json').version)
 commander.command('list-org [org-name]')
          .description('List all repos for organization')
          .option('-u, --url', 'Show URL')
+         .option('-l, --lang', 'Show language')
          .action(orgList);
 
 commander.command('list-user [user-name]')
          .description('List all repos for user')
          .option('-u, --url', 'Show URL')
+         .option('-l, --lang', 'Show language')
          .action(userList);
 
 commander.command('clone-org [org-name]')
@@ -32,6 +34,7 @@ commander.command('clone-org [org-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
+         .option('--only-lang [lang]', 'Limit cloning to repos of certain language')
          .description('Clone organization repositories')
          .action(orgClone);
 
@@ -40,6 +43,7 @@ commander.command('clone-user [user-name]')
                  'Exclude repository',
                  (v, acc) => { acc.push(v); return acc;}, [])
          .option('--out [dir]', 'Output directory. defaults to current working directory')
+         .option('--only-lang [lang]', 'Limit cloning to repos of certain language')
          .description('Clone user repositories')
          .action(userClone);
 
@@ -58,11 +62,12 @@ function processUserOrOrgArgs(userOrOrg, opts) {
     name: userOrOrg,
     exclude: opts.exclude || [],
     outDir: opts.out || process.cwd(),
+    lang: opts.onlyLang
   };
 }
 
 function userList(user, opts) {
-  list(opts.url, cb => {
+  list(opts, cb => {
     return github.repos.getForUser({
       username: user,
       per_page: 100
@@ -71,7 +76,7 @@ function userList(user, opts) {
 }
 
 function orgList(org, opts) {
-  list(opts.url, cb => {
+  list(opts, cb => {
     return github.repos.getForOrg({
       org: org,
       per_page: 100
@@ -79,7 +84,7 @@ function orgList(org, opts) {
   });
 }
   
-function list(showUrl, getRepos) {
+function list(opts, getRepos) {
   getRepos((err, repos) => {
     if (err) {
       throw err;
@@ -87,11 +92,14 @@ function list(showUrl, getRepos) {
     repos.sort( (a, b) => {
       return (a.name < b.name) ? -1 : 1;
     }).forEach(repo => {
-      if (showUrl) {
-        console.log(`${repo.name} ${repo.url}`);
-      } else {
-        console.log(repo.name);
+      let str = repo.name;
+      if (opts.lang) {
+        str += ` ${repo.language}`;
       }
+      if (opts.url) {
+        str += ` ${repo.url}`;
+      }
+      console.log(str);
     });
   });
 }
@@ -122,7 +130,8 @@ function clone(obj, getRepos) {
 
   const outDir       = obj.outDir;
   const name         = obj.name;
-  const excludeRepos = obj.exclude;
+  const excludeRepos = obj.exclude.map(n => n.toLowerCase());
+  const lang         = obj.lang ? obj.lang.toLowerCase() : undefined;
 
   shell.cd(outDir);
   shell.mkdir(name); shell.cd(name);
@@ -134,7 +143,18 @@ function clone(obj, getRepos) {
     }
     shell.ShellString(JSON.stringify(repos)).to('repos.info');
 
-    const cloneThunks = repos.filter(repo => excludeRepos.indexOf(repo.name) === -1).map(repo => {
+    const filter = (repo) => {
+      const name = repo.name.toLowerCase();
+      if(excludeRepos.indexOf(name) !== -1) {
+        return false; // don't include excluded repos
+      }
+      if (lang) {
+        return repo.language && (repo.language.toLowerCase() === lang);
+      }
+      return true;
+    };
+
+    const cloneThunks = repos.filter(filter).map(repo => {
       return (cb) => {
         console.log(`Cloning ${repo.name}`);
         shell.exec(`git clone ${repo.clone_url}`, (code, stdout, stderr) => {
