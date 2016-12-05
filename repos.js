@@ -13,6 +13,34 @@ const github = new GitHubApi({
   timeout: 5000
 });
 
+function mkGetRepos(callback) {
+  let repos = [];
+  const getRepos = (err, res) => {
+    if (err) {
+      callback(err, repos);
+    }
+
+    repos = repos.concat(res);
+    if (github.hasNextPage(res)) {
+      github.getNextPage(res, getRepos)
+    } else {
+      callback(null, repos);
+    }
+  }
+  return getRepos;
+}
+
+const getForUser = (obj, callback) => {
+  const getRepos = mkGetRepos(callback);
+  github.repos.getForUser(obj, getRepos);
+};
+
+const getForOrg = (obj, callback) => {
+  const getRepos = mkGetRepos(callback);
+  github.repos.getForOrg(obj, getRepos);
+};
+
+
 
 commander.version(require('./package.json').version)
          .description('Clone github repos');
@@ -53,6 +81,7 @@ if (!commander.args.length) {
   commander.help();
 }
 
+
 function processUserOrOrgArgs(userOrOrg, opts) {
   if(!userOrOrg) {
     commander.help();
@@ -68,7 +97,7 @@ function processUserOrOrgArgs(userOrOrg, opts) {
 
 function userList(user, opts) {
   list(opts, cb => {
-    return github.repos.getForUser({
+    return getForUser({
       username: user,
       per_page: 100
     }, cb);
@@ -77,7 +106,7 @@ function userList(user, opts) {
 
 function orgList(org, opts) {
   list(opts, cb => {
-    return github.repos.getForOrg({
+    return getForOrg({
       org: org,
       per_page: 100
     }, cb);
@@ -109,7 +138,7 @@ function list(opts, getRepos) {
 function userClone(user, opts) {
   const obj = processUserOrOrgArgs(user, opts);
   return clone(obj, (cb) => {
-    return github.repos.getForUser({
+    return getForUser({
       username: user,
       per_page: 100
     }, cb);
@@ -119,7 +148,7 @@ function userClone(user, opts) {
 function orgClone(org, opts) {
   const obj = processUserOrOrgArgs(org, opts);
   return clone(obj, (cb) => {
-    return github.repos.getForOrg({
+    return getForOrg({
       org: org,
       per_page: 100
     }, cb);
