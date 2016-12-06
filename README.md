@@ -36,3 +36,10 @@ Clone all JavaScript repos except `github-repos` and `lio`
 ```
 github-repos clone-user deian --exclude lio --exclude github-repos --out /tmp/ --only-lang javascript
 ```
+
+# Addressing rate limits
+
+GitHub rate limits public IPs. You may need to generate an access token to lift
+some of this. Get a token (with no scope) from:
+<https://github.com/settings/tokens> and set the token as the `GITHUB_TOKEN`
+environment variable.

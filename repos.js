@@ -13,6 +13,12 @@ const github = new GitHubApi({
   timeout: 5000
 });
 
+if (process.env['GITHUB_TOKEN']) {
+  github.authenticate({
+    type: "token",
+    token: process.env['GITHUB_TOKEN']
+  });
+}
 
 commander.version(require('./package.json').version)
          .description('Clone github repos');
